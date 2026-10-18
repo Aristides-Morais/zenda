@@ -1,0 +1,172 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  EMPLOYEE
+}
+
+enum SaleStatus {
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships Membership[]
+  sales       Sale[]
+  expenses    Expense[]
+  auditLogs   AuditLog[]
+
+  @@map("users")
+}
+
+model Business {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships Membership[]
+  products    Product[]
+  customers   Customer[]
+  sales       Sale[]
+  expenses    Expense[]
+  auditLogs   AuditLog[]
+
+  @@map("businesses")
+}
+
+model Membership {
+  id         String   @id @default(cuid())
+  userId     String
+  businessId String
+  role       Role
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, businessId])
+  @@map("memberships")
+}
+
+model Product {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  sku        String?
+  price      Decimal  @db.Decimal(12, 2)
+  cost       Decimal  @db.Decimal(12, 2)
+  stock      Int      @default(0)
+  minStock   Int      @default(0)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business  Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  saleItems SaleItem[]
+
+  @@unique([businessId, sku])
+  @@index([businessId])
+  @@map("products")
+}
+
+model Customer {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  phone      String?
+  email      String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  sales    Sale[]
+
+  @@index([businessId])
+  @@map("customers")
+}
+
+model Sale {
+  id         String     @id @default(cuid())
+  businessId String
+  userId     String
+  customerId String?
+  total      Decimal    @db.Decimal(12, 2)
+  status     SaleStatus @default(COMPLETED)
+  createdAt  DateTime   @default(now())
+
+  business Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User       @relation(fields: [userId], references: [id])
+  customer Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items    SaleItem[]
+
+  @@index([businessId, createdAt])
+  @@map("sales")
+}
+
+model SaleItem {
+  id        String  @id @default(cuid())
+  saleId    String
+  productId String
+  quantity  Int
+  unitPrice Decimal @db.Decimal(12, 2)
+  subtotal  Decimal @db.Decimal(12, 2)
+
+  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([saleId])
+  @@map("sale_items")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  businessId  String
+  userId      String
+  description String
+  amount      Decimal  @db.Decimal(12, 2)
+  category    String
+  date        DateTime
+  createdAt   DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@index([businessId, date])
+  @@map("expenses")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  businessId String
+  userId     String
+  action     String
+  entity     String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@index([businessId, createdAt])
+  @@map("audit_logs")
+}
