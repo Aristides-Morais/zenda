@@ -20,15 +20,8 @@ export class AuthError extends Error {
 }
 
 export type AuthResult = {
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  };
-  business: {
-    id: string;
-    name: string;
-  };
+  user: { id: string; email: string; name: string };
+  business: { id: string; name: string; plan: string };
   accessToken: string;
   refreshToken: string;
 };
@@ -73,19 +66,12 @@ export async function register(input: RegisterInput): Promise<AuthResult> {
     }
   );
 
-  const accessToken = signAccessToken({
-    sub: user.id,
-    email: user.email,
-  });
-
-  const refreshToken = signRefreshToken({
-    sub: user.id,
-    jti: membership.id,
-  });
+  const accessToken = signAccessToken({ sub: user.id, email: user.email });
+  const refreshToken = signRefreshToken({ sub: user.id, jti: membership.id });
 
   return {
     user: { id: user.id, email: user.email, name: user.name },
-    business: { id: business.id, name: business.name },
+    business: { id: business.id, name: business.name, plan: business.plan },
     accessToken,
     refreshToken,
   };
@@ -116,19 +102,16 @@ export async function login(input: LoginInput): Promise<AuthResult> {
     throw new AuthError("NO_BUSINESS", "Utilizador sem negócio associado", 500);
   }
 
-  const accessToken = signAccessToken({
-    sub: user.id,
-    email: user.email,
-  });
-
-  const refreshToken = signRefreshToken({
-    sub: user.id,
-    jti: membership.id,
-  });
+  const accessToken = signAccessToken({ sub: user.id, email: user.email });
+  const refreshToken = signRefreshToken({ sub: user.id, jti: membership.id });
 
   return {
     user: { id: user.id, email: user.email, name: user.name },
-    business: { id: membership.business.id, name: membership.business.name },
+    business: { 
+      id: membership.business.id, 
+      name: membership.business.name,
+      plan: membership.business.plan 
+    },
     accessToken,
     refreshToken,
   };
@@ -140,6 +123,7 @@ export type MeResult = {
     businessId: string;
     businessName: string;
     role: string;
+    plan: string;
   }>;
 };
 
@@ -153,7 +137,7 @@ export async function me(userId: string): Promise<MeResult> {
       memberships: {
         select: {
           role: true,
-          business: { select: { id: true, name: true } },
+          business: { select: { id: true, name: true, plan: true } },
         },
       },
     },
@@ -169,14 +153,12 @@ export async function me(userId: string): Promise<MeResult> {
       businessId: m.business.id,
       businessName: m.business.name,
       role: m.role,
+      plan: m.business.plan,
     })),
   };
 }
 
-export function buildAccessTokenPayload(user: {
-  id: string;
-  email: string;
-}): AccessTokenPayload {
+export function buildAccessTokenPayload(user: { id: string; email: string }): AccessTokenPayload {
   return { sub: user.id, email: user.email };
 }
 

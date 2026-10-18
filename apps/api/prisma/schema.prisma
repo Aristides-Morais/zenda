@@ -1,8 +1,6 @@
 generator client {
-  provider            = "prisma-client"
-  output              = "../src/generated/prisma"
-  moduleFormat        = "esm"
-  importFileExtension = "js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -18,6 +16,11 @@ enum Role {
 enum SaleStatus {
   COMPLETED
   CANCELLED
+}
+
+enum Plan {
+  FREE
+  PRO
 }
 
 model User {
@@ -39,6 +42,7 @@ model User {
 model Business {
   id        String   @id @default(cuid())
   name      String
+  plan      Plan     @default(FREE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -10,6 +10,7 @@ import ProductsPage from "./pages/ProductsPage";
 import CustomersPage from "./pages/CustomersPage";
 import SalesPage from "./pages/SalesPage";
 import ExpensesPage from "./pages/ExpensesPage";
+import BillingPage from "./pages/BillingPage";
 
 function Protected({ children }: { children: ReactNode }) {
   return (
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/clientes" element={<Protected><CustomersPage /></Protected>} />
           <Route path="/vendas" element={<Protected><SalesPage /></Protected>} />
           <Route path="/despesas" element={<Protected><ExpensesPage /></Protected>} />
+          <Route path="/faturacao" element={<Protected><BillingPage /></Protected>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -16,12 +16,10 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Pesquisa e paginação
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Modal (Criar e Editar)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -56,14 +54,12 @@ export default function ProductsPage() {
     return () => clearTimeout(timer);
   }, [search, page]);
 
-  // Abrir Modal para Criar
   function handleOpenCreate() {
     setEditingProduct(null);
     setFormData({ name: "", sku: "", price: "", cost: "", stock: "0", minStock: "5" });
     setIsModalOpen(true);
   }
 
-  // Abrir Modal para Editar
   function handleOpenEdit(product: Product) {
     setEditingProduct(product);
     setFormData({
@@ -77,7 +73,6 @@ export default function ProductsPage() {
     setIsModalOpen(true);
   }
 
-  // Submeter (Criar ou Editar)
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSubmitting(true);
@@ -99,14 +94,18 @@ export default function ProductsPage() {
 
       setIsModalOpen(false);
       loadProducts();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Erro ao guardar");
+    } catch (err: any) {
+      // --- AQUI ESTÁ A CORREÇÃO PARA O PAYWALL ---
+      if (err.code === "LIMIT_REACHED") {
+        alert(err.message);
+      } else {
+        alert(err instanceof Error ? err.message : "Erro ao guardar");
+      }
     } finally {
       setSubmitting(false);
     }
   }
 
-  // Apagar Produto
   async function handleDelete(id: string) {
     if (!window.confirm("Tem a certeza que quer apagar este produto?")) return;
     try {
@@ -134,7 +133,6 @@ export default function ProductsPage() {
 
       <div className="p-8">
         <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
-          {/* Barra de Pesquisa */}
           <div className="p-4 border-b border-zinc-200">
             <input
               type="text"
@@ -148,7 +146,6 @@ export default function ProductsPage() {
             />
           </div>
 
-          {/* Tabela */}
           {loading ? (
             <div className="py-12 text-center text-sm text-zinc-500">A carregar...</div>
           ) : error ? (
@@ -207,7 +204,6 @@ export default function ProductsPage() {
             </table>
           )}
 
-          {/* Paginação */}
           <div className="px-5 py-3 border-t border-zinc-200 flex items-center justify-between text-sm">
             <span className="text-zinc-500">
               Página {page} de {totalPages}
@@ -232,7 +228,6 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Modal (Criar / Editar) */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">

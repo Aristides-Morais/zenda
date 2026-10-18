@@ -8,6 +8,7 @@ const navItems = [
   { to: "/clientes", label: "Clientes" },
   { to: "/vendas", label: "Vendas" },
   { to: "/despesas", label: "Despesas" },
+  { to: "/faturacao", label: "Faturação" },
 ];
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -30,8 +31,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <div className="font-semibold text-zinc-900 leading-tight">
               Zenda
             </div>
-            <div className="text-xs text-zinc-500 truncate">
+            <div className="text-xs text-zinc-500 truncate flex items-center gap-1">
               {business?.name ?? "—"}
+              {business?.plan === "PRO" && (
+                <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-1 rounded">PRO</span>
+              )}
             </div>
           </div>
         </div>

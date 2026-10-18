@@ -1,3 +1,4 @@
+import { businessRouter } from "./modules/business/business.routes.js";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -20,6 +21,7 @@ app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
+app.use("/api/v1/business", businessRouter);
 
 app.get("/api/v1/health", (_req, res) => {
   res.json({ status: "ok", service: "zenda-api", time: new Date().toISOString() });

@@ -7,6 +7,7 @@ export type User = {
 export type Business = {
   id: string;
   name: string;
+  plan?: "FREE" | "PRO";
 };
 
 export type AuthResponse = {
@@ -21,5 +22,6 @@ export type MeResponse = {
     businessId: string;
     businessName: string;
     role: "OWNER" | "MANAGER" | "EMPLOYEE";
+    plan: "FREE" | "PRO";
   }>;
 };

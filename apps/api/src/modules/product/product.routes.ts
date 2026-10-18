@@ -1,3 +1,4 @@
+import { checkProductLimit } from "../../middleware/limit.middleware.js";
 import { Router } from "express";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 import { requireBusiness } from "../../middleware/business.middleware.js";
@@ -38,7 +39,7 @@ productRouter.get("/:id", async (req, res, next) => {
   }
 });
 
-productRouter.post("/", async (req, res, next) => {
+productRouter.post("/", checkProductLimit(), async (req, res, next) => {
   try {
     const input = createProductSchema.parse(req.body);
     const result = await createProduct(req.businessId!, input);

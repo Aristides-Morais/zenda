@@ -44,7 +44,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(me.user);
         const first = me.memberships[0];
         if (first) {
-          setBusiness({ id: first.businessId, name: first.businessName });
+          setBusiness({ 
+            id: first.businessId, 
+            name: first.businessName,
+            plan: first.plan 
+          });
         }
       } catch {
         // sem sessão válida, é normal
