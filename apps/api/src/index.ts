@@ -9,7 +9,8 @@ import { productRouter } from "./modules/product/product.routes.js";
 import { customerRouter } from "./modules/customer/customer.routes.js";
 import { saleRouter } from "./modules/sale/sale.routes.js";
 import { expenseRouter } from "./modules/expense/expense.routes.js";
-import { businessRouter } from "./modules/business/business.routes.js"; // <-- ESTA LINHA É NOVA
+import { businessRouter } from "./modules/business/business.routes.js";
+import { errorHandler, notFoundHandler } from "./middleware/error.middleware.js"; // <-- ESTA LINHA FALTAVA
 
 const app = express();
 
@@ -37,7 +38,7 @@ app.use("/api/v1/products", productRouter);
 app.use("/api/v1/customers", customerRouter);
 app.use("/api/v1/sales", saleRouter);
 app.use("/api/v1/expenses", expenseRouter);
-app.use("/api/v1/business", businessRouter); // <-- ESTA LINHA TAMBÉM
+app.use("/api/v1/business", businessRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
