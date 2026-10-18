@@ -42,6 +42,6 @@ app.use("/api/v1/business", businessRouter); // <-- ESTA LINHA TAMBÉM
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-app.listen(env.PORT, () => {
-  console.log(`Zenda API a correr em http://localhost:${env.PORT}`);
+app.listen(env.PORT, "0.0.0.0", () => {
+  console.log(`Zenda API a correr na porta ${env.PORT}`);
 });
