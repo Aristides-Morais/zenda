@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext";
 
@@ -14,6 +14,7 @@ const navItems = [
 export function AppLayout({ children }: { children: ReactNode }) {
   const { user, business, logout } = useAuth();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   async function handleLogout() {
     await logout();
@@ -21,8 +22,40 @@ export function AppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex">
-      <aside className="w-60 shrink-0 border-r border-zinc-200 bg-white flex flex-col">
+    <div className="min-h-screen bg-zinc-50 flex flex-col md:flex-row">
+      {/* Header Mobile */}
+      <div className="md:hidden bg-white border-b border-zinc-200 px-4 h-16 flex items-center justify-between sticky top-0 z-40">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center font-bold text-sm">
+            Z
+          </div>
+          <span className="font-semibold text-zinc-900">Zenda</span>
+        </div>
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 text-zinc-600 hover:bg-zinc-100 rounded-lg"
+        >
+          {/* Ícone Hambúrguer */}
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Overlay para fechar o menu no mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-60 bg-white border-r border-zinc-200 flex flex-col transition-transform duration-300
+        md:static md:translate-x-0
+        ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
         <div className="h-16 px-5 flex items-center gap-3 border-b border-zinc-200">
           <div className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center font-bold text-sm">
             Z
@@ -40,12 +73,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.exact}
+              onClick={() => setIsMobileMenuOpen(false)} // Fecha o menu ao clicar
               className={({ isActive }) =>
                 `block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
@@ -75,7 +109,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <main className="flex-1 min-w-0">{children}</main>
+      {/* Conteúdo Principal */}
+      <main className="flex-1 min-w-0 flex flex-col">
+        {children}
+      </main>
     </div>
   );
 }
