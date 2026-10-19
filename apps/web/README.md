@@ -10,11 +10,14 @@ O Zenda é uma plataforma completa de gestão (SaaS) desenhada para pequenos neg
 
 ## 📸 Screenshots
 
-### Dashboard
+### Dashboard (KPIs e Gráficos)
 ![Dashboard do Zenda](docs/images/dashboard.png)
 
 ### Gestão de Produtos
 ![Página de Produtos](docs/images/produtos.png)
+
+### Registo de Vendas
+![Página de Vendas](docs/images/vendas.png)
 
 ### Faturação (Paywall)
 ![Página de Faturação](docs/images/faturacao.png)
