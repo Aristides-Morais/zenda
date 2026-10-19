@@ -1,75 +1,30 @@
-# React + TypeScript + Vite
+# Zenda - SaaS de Gestão para Pequenos Negócios
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+O Zenda é uma plataforma completa de gestão (SaaS) desenhada para pequenos negócios (mercearias, salões, restaurantes). Permite gerir produtos, stock, clientes, vendas e despesas num dashboard em tempo real.
 
-Currently, two official plugins are available:
+## 🚀 Demo Online
+- **Link:** [https://zenda-83pw.vercel.app](https://zenda-83pw.vercel.app)
+- **Credenciais de teste:** 
+  - Email: `dono@zenda.app`
+  - Password: `password123`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠️ Stack Tecnológica
+- **Frontend:** React, Vite, TypeScript, TailwindCSS, Recharts
+- **Backend:** Node.js, Express, TypeScript, Zod
+- **Base de Dados:** PostgreSQL (Neon), Prisma ORM
+- **Infraestrutura:** Vercel (Frontend) e Render (Backend)
 
-## React Compiler
+## ✨ Funcionalidades Principais
+- Autenticação segura com JWT e Refresh Tokens (cookies httpOnly).
+- Arquitetura Multi-tenant (cada empresa vê apenas os seus dados).
+- Dashboard com KPIs em tempo real e gráficos.
+- Registo de vendas com baixa automática de stock (Transações SQL).
+- Simulação de Faturação (Plano Free com limite de 50 produtos vs Plano PRO ilimitado).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
-
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
+## 💻 Como correr localmente
+1. Clone o repositório.
+2. Instale as dependências: `pnpm install`
+3. Suba o banco de dados: `pnpm db:up`
+4. Configure o `.env` baseando-se no `.env.example`.
+5. Corra as migrações: `pnpm --filter @zenda/api exec prisma migrate dev`
+6. Arranque o projeto: `pnpm dev`
