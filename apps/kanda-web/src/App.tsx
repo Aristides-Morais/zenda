@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 const BUSINESS_ID = "cmvcgldqi0000wkuvb6hfiwq0";
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 type Product = {
   id: string;
@@ -25,13 +26,15 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [formData, setFormData] = useState({ name: "", phone: "", address: "" });
   
-  // Estado para o ecrã de sucesso
   const [isSuccess, setIsSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/v1/store/${BUSINESS_ID}`)
-      .then((res) => res.json())
+    fetch(`${API_URL}/api/v1/store/${BUSINESS_ID}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Loja não encontrada");
+        return res.json();
+      })
       .then((data) => {
         setStore(data);
         setLoading(false);
@@ -60,7 +63,7 @@ export default function App() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch("/api/v1/store/checkout", {
+      const res = await fetch(`${API_URL}/api/v1/store/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -85,7 +88,7 @@ export default function App() {
   }
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">A carregar loja...</div>;
-  if (!store) return <div className="min-h-screen flex items-center justify-center">Loja não encontrada.</div>;
+  if (!store) return <div className="min-h-screen flex items-center justify-center text-zinc-500">Loja não encontrada.</div>;
 
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col md:flex-row relative">
@@ -124,7 +127,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Carrinho */}
       <aside className="w-full md:w-96 bg-white border-l border-zinc-200 flex flex-col min-h-screen">
         <div className="p-6 border-b border-zinc-200">
           <h2 className="text-xl font-bold text-zinc-900">O seu Carrinho</h2>
@@ -164,7 +166,6 @@ export default function App() {
         )}
       </aside>
 
-      {/* Modal de Sucesso (Substitui o alert) */}
       {isSuccess && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
