@@ -42,3 +42,10 @@ O Zenda é uma plataforma completa de gestão (SaaS) desenhada para pequenos neg
 4. Configure o `.env` baseando-se no `.env.example`.
 5. Corra as migrações: `pnpm --filter @zenda/api exec prisma migrate dev`
 6. Arranque o projeto: `pnpm dev`
+
+## 🛍️ Kanda (E-commerce)
+
+O Kanda é a loja online integrada com o Zenda. Permite aos clientes ver o catálogo, adicionar produtos ao carrinho e finalizar a compra. O stock é atualizado automaticamente na base de dados do Zenda.
+
+- **Live Demo:** [https://kanda-web-cyan.vercel.app](https://kanda-web-cyan.vercel.app)
+- **Funcionalidades:** Catálogo de produtos, carrinho de compras, checkout de cliente e integração de stock em tempo real com o Zenda.
