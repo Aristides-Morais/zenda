@@ -9,6 +9,7 @@ const navItems = [
   { to: "/vendas", label: "Vendas" },
   { to: "/despesas", label: "Despesas" },
   { to: "/faturacao", label: "Faturação" },
+  { to: "/kanda", label: "Loja Kanda" }, // <-- NOVO
 ];
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -35,7 +36,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="p-2 text-zinc-600 hover:bg-zinc-100 rounded-lg"
         >
-          {/* Ícone Hambúrguer */}
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
@@ -79,7 +79,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               key={item.to}
               to={item.to}
               end={item.exact}
-              onClick={() => setIsMobileMenuOpen(false)} // Fecha o menu ao clicar
+              onClick={() => setIsMobileMenuOpen(false)}
               className={({ isActive }) =>
                 `block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActive

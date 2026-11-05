@@ -11,6 +11,7 @@ import CustomersPage from "./pages/CustomersPage";
 import SalesPage from "./pages/SalesPage";
 import ExpensesPage from "./pages/ExpensesPage";
 import BillingPage from "./pages/BillingPage";
+import KandaAdminPage from "./pages/KandaAdminPage"; // <-- NOVO
 
 function Protected({ children }: { children: ReactNode }) {
   return (
@@ -34,6 +35,9 @@ export default function App() {
           <Route path="/vendas" element={<Protected><SalesPage /></Protected>} />
           <Route path="/despesas" element={<Protected><ExpensesPage /></Protected>} />
           <Route path="/faturacao" element={<Protected><BillingPage /></Protected>} />
+          
+          {/* Rota do Kanda */}
+          <Route path="/kanda" element={<Protected><KandaAdminPage /></Protected>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
