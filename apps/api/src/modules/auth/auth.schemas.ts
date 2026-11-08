@@ -15,7 +15,10 @@ export const registerSchema = z.object({
   password: z
     .string()
     .min(8, "A password deve ter pelo menos 8 caracteres")
-    .max(72, "A password não pode ter mais de 72 caracteres"),
+    .max(72, "A password não pode ter mais de 72 caracteres")
+    .regex(/[A-Z]/, "A password deve conter pelo menos uma letra maiúscula")
+    .regex(/[a-z]/, "A password deve conter pelo menos uma letra minúscula")
+    .regex(/[0-9]/, "A password deve conter pelo menos um número"),
   businessName: z
     .string()
     .trim()

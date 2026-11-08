@@ -5,6 +5,8 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    host: "127.0.0.1",
+    port: 3000, // <-- Nova porta
     proxy: {
       "/api": "http://localhost:4000",
     },

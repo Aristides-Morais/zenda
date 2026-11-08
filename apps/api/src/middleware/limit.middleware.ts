@@ -1,6 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
+import rateLimit from "express-rate-limit";
 import { prisma } from "../lib/prisma.js";
 
+// 1. Middleware para limitar a criação de produtos (Plano FREE)
 export function checkProductLimit() {
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.businessId) {
@@ -22,7 +24,6 @@ export function checkProductLimit() {
       return next(); // Plano PRO não tem limites
     }
 
-    // Plano FREE: máximo de 50 produtos
     const productCount = await prisma.product.count({
       where: { businessId: req.businessId, active: true },
     });
@@ -40,3 +41,17 @@ export function checkProductLimit() {
     next();
   };
 }
+
+// 2. Rate Limiter para o Checkout do Kanda (Previne bots de compras falsas)
+export const checkoutLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: 5, // Máximo de 5 encomendas por IP por hora
+  message: { 
+    error: { 
+      code: "TOO_MANY_REQUESTS", 
+      message: "Demasiadas tentativas de compra. Por favor, tente novamente mais tarde." 
+    } 
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

@@ -9,7 +9,7 @@ datasource db {
 }
 
 // ==========================================
-// MODELOS DO ZENDA (Gestão)
+// ENUMS
 // ==========================================
 
 enum Role {
@@ -28,6 +28,18 @@ enum Plan {
   PRO
 }
 
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+// ==========================================
+// MODELOS DO ZENDA (Gestão)
+// ==========================================
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -36,10 +48,11 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  memberships Membership[]
-  sales       Sale[]
-  expenses    Expense[]
-  auditLogs   AuditLog[]
+  memberships   Membership[]
+  sales         Sale[]
+  expenses      Expense[]
+  auditLogs     AuditLog[]
+  refreshTokens RefreshToken[] // <-- NOVA RELAÇÃO AQUI
 
   @@map("users")
 }
@@ -189,14 +202,6 @@ model AuditLog {
 // MODELOS DO KANDA (E-commerce)
 // ==========================================
 
-enum OrderStatus {
-  PENDING
-  PAID
-  SHIPPED
-  DELIVERED
-  CANCELLED
-}
-
 model Category {
   id         String   @id @default(cuid())
   businessId String
@@ -233,15 +238,15 @@ model EcomProduct {
 }
 
 model Order {
-  id         String      @id @default(cuid())
-  businessId String
-  customerName String
-  customerPhone String
+  id              String      @id @default(cuid())
+  businessId      String
+  customerName    String
+  customerPhone   String
   customerAddress String
-  total      Decimal     @db.Decimal(12, 2)
-  status     OrderStatus @default(PENDING)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  total           Decimal     @db.Decimal(12, 2)
+  status          OrderStatus @default(PENDING)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   business Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
   items    OrderItem[]
@@ -262,4 +267,21 @@ model OrderItem {
 
   @@index([orderId])
   @@map("order_items")
+}
+
+// ==========================================
+// MODELOS DE SEGURANÇA
+// ==========================================
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }

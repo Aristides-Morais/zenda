@@ -4,7 +4,7 @@ import { hashPassword, verifyPassword } from "../../lib/argon.js";
 import {
   signAccessToken,
   signRefreshToken,
-  type AccessTokenPayload,
+  verifyRefreshToken,
 } from "../../lib/jwt.js";
 import type { LoginInput, RegisterInput } from "./auth.schemas.js";
 
@@ -26,6 +26,27 @@ export type AuthResult = {
   refreshToken: string;
 };
 
+// Função auxiliar para gerar e guardar os tokens na base de dados
+async function generateTokens(user: { id: string; email: string }) {
+  const accessToken = signAccessToken({ sub: user.id, email: user.email });
+  const jti = randomUUID();
+  const refreshToken = signRefreshToken({ sub: user.id, jti });
+
+  // Guardar o JTI (ID único do token) na base de dados
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7); // 7 dias
+
+  await prisma.refreshToken.create({
+    data: {
+      token: jti,
+      userId: user.id,
+      expiresAt,
+    },
+  });
+
+  return { accessToken, refreshToken };
+}
+
 export async function register(input: RegisterInput): Promise<AuthResult> {
   const existing = await prisma.user.findUnique({
     where: { email: input.email },
@@ -38,36 +59,23 @@ export async function register(input: RegisterInput): Promise<AuthResult> {
 
   const passwordHash = await hashPassword(input.password);
 
-  const { user, business, membership } = await prisma.$transaction(
-    async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          email: input.email,
-          name: input.name,
-          passwordHash,
-        },
-      });
+  const { user, business } = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: { email: input.email, name: input.name, passwordHash },
+    });
 
-      const business = await tx.business.create({
-        data: {
-          name: input.businessName,
-        },
-      });
+    const business = await tx.business.create({
+      data: { name: input.businessName },
+    });
 
-      const membership = await tx.membership.create({
-        data: {
-          userId: user.id,
-          businessId: business.id,
-          role: "OWNER",
-        },
-      });
+    await tx.membership.create({
+      data: { userId: user.id, businessId: business.id, role: "OWNER" },
+    });
 
-      return { user, business, membership };
-    }
-  );
+    return { user, business };
+  });
 
-  const accessToken = signAccessToken({ sub: user.id, email: user.email });
-  const refreshToken = signRefreshToken({ sub: user.id, jti: membership.id });
+  const { accessToken, refreshToken } = await generateTokens(user);
 
   return {
     user: { id: user.id, email: user.email, name: user.name },
@@ -102,19 +110,58 @@ export async function login(input: LoginInput): Promise<AuthResult> {
     throw new AuthError("NO_BUSINESS", "Utilizador sem negócio associado", 500);
   }
 
-  const accessToken = signAccessToken({ sub: user.id, email: user.email });
-  const refreshToken = signRefreshToken({ sub: user.id, jti: membership.id });
+  const { accessToken, refreshToken } = await generateTokens(user);
 
   return {
     user: { id: user.id, email: user.email, name: user.name },
-    business: { 
-      id: membership.business.id, 
+    business: {
+      id: membership.business.id,
       name: membership.business.name,
-      plan: membership.business.plan 
+      plan: membership.business.plan,
     },
     accessToken,
     refreshToken,
   };
+}
+
+export async function rotateRefreshToken(oldRefreshToken: string) {
+  let payload;
+  try {
+    payload = verifyRefreshToken(oldRefreshToken);
+  } catch {
+    throw new AuthError("INVALID_TOKEN", "Token inválido ou expirado", 401);
+  }
+
+  // Procurar o token na base de dados
+  const storedToken = await prisma.refreshToken.findUnique({
+    where: { token: payload.jti },
+  });
+
+  // Se não existir, significa que já foi usado ou é falso
+  if (!storedToken) {
+    throw new AuthError("INVALID_TOKEN", "Token já utilizado ou revogado", 401);
+  }
+
+  // Apagar o token antigo (Rotação)
+  await prisma.refreshToken.delete({
+    where: { id: storedToken.id },
+  });
+
+  // Gerar novos tokens
+  const user = await prisma.user.findUnique({
+    where: { id: payload.sub },
+    select: { id: true, email: true },
+  });
+
+  if (!user) throw new AuthError("USER_NOT_FOUND", "Utilizador não encontrado", 404);
+
+  return generateTokens(user);
+}
+
+export async function revokeRefreshToken(jti: string) {
+  await prisma.refreshToken.deleteMany({
+    where: { token: jti },
+  });
 }
 
 export type MeResult = {
@@ -157,9 +204,3 @@ export async function me(userId: string): Promise<MeResult> {
     })),
   };
 }
-
-export function buildAccessTokenPayload(user: { id: string; email: string }): AccessTokenPayload {
-  return { sub: user.id, email: user.email };
-}
-
-export { randomUUID };
