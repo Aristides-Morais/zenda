@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 const BUSINESS_ID = "cmvcgldqi0000wkuvb6hfiwq0";
+const API_URL = import.meta.env.VITE_API_URL || ""; // <-- ADICIONADO AQUI
 
 type Product = {
   id: string;
@@ -24,13 +25,14 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [formData, setFormData] = useState({ name: "", phone: "", address: "" });
-
+  
   const [isSuccess, setIsSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`/api/v1/store/${BUSINESS_ID}`)
+    // CORRIGIDO AQUI: Usar API_URL
+    fetch(`${API_URL}/api/v1/store/${BUSINESS_ID}`)
       .then((res) => res.json())
       .then((data) => {
         setStore(data);
@@ -93,7 +95,8 @@ export default function App() {
     setErrorMsg(null);
 
     try {
-      const res = await fetch("/api/v1/store/checkout", {
+      // CORRIGIDO AQUI: Usar API_URL
+      const res = await fetch(`${API_URL}/api/v1/store/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -104,7 +107,7 @@ export default function App() {
           items: cart.map((item) => ({ productId: item.id, quantity: item.quantity })),
         }),
       });
-
+      
       const data = await res.json();
 
       if (!res.ok) {
@@ -114,7 +117,7 @@ export default function App() {
         }
         throw new Error(data.error?.message || "Erro ao processar o pedido.");
       }
-
+      
       setCart([]);
       setFormData({ name: "", phone: "", address: "" });
       setIsSuccess(true);
