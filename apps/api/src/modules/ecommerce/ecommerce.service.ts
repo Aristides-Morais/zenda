@@ -27,7 +27,12 @@ export async function getPublicStore(businessId: string) {
     orderBy: { createdAt: "desc" },
   });
 
-  return { businessName: business.name, categories, products };
+  return { 
+    businessName: business.name, 
+    categories, 
+    // A CORREÇÃO: Forçar o preço a ser um número (Number)
+    products: products.map(p => ({ ...p, price: Number(p.price) })) 
+  };
 }
 
 export async function processCheckout(input: CheckoutInput) {

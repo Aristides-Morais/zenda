@@ -23,8 +23,6 @@ type CartItem = Product & { quantity: number };
 export default function App() {
   const [store, setStore] = useState<StoreData | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Novos estados para o carrinho
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false); 
   
@@ -89,8 +87,8 @@ export default function App() {
     setCart((prev) => prev.filter((item) => item.id !== productId));
   }
 
-  // Cálculos do carrinho
-  const cartTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  // Cálculos do carrinho (BLINDADOS COM Number())
+  const cartTotal = cart.reduce((acc, item) => acc + Number(item.price) * item.quantity, 0);
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   async function handleCheckout(e: FormEvent) {
@@ -123,7 +121,7 @@ export default function App() {
       
       setCart([]);
       setFormData({ name: "", phone: "", address: "" });
-      setIsCartOpen(false); // Fecha o carrinho
+      setIsCartOpen(false);
       setIsSuccess(true);
     } catch (err: any) {
       setErrorMsg(err.message);
@@ -145,7 +143,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-50 relative">
-      
       {/* Header com o Carrinho */}
       <header className="bg-white border-b border-zinc-200 sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -170,7 +167,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Grelha de Produtos (Ocupa o ecrã todo) */}
+      {/* Grelha de Produtos */}
       <main className="max-w-6xl mx-auto p-4 md:p-8">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
           {store.products.map((product) => (
@@ -186,7 +183,7 @@ export default function App() {
                 <h3 className="font-semibold text-sm md:text-lg text-zinc-900 line-clamp-2 leading-tight">{product.name}</h3>
                 <p className="text-xs md:text-sm text-zinc-500 mb-2 md:mb-4 flex-1 line-clamp-2">{product.description || "Sem descrição"}</p>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mt-auto">
-                  <span className="text-sm md:text-xl font-bold text-zinc-900">{product.price.toLocaleString("pt-AO")} Kz</span>
+                  <span className="text-sm md:text-xl font-bold text-zinc-900">{Number(product.price).toLocaleString("pt-AO")} Kz</span>
                   <button
                     onClick={() => addToCart(product)}
                     disabled={product.stock === 0}
@@ -201,7 +198,7 @@ export default function App() {
         </div>
       </main>
 
-      {/* Overlay (Fundo escuro quando o carrinho abre) */}
+      {/* Overlay do Carrinho */}
       {isCartOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 transition-opacity"
@@ -242,7 +239,7 @@ export default function App() {
                     <span className="px-3 py-1 text-sm font-medium border-x border-zinc-300">{item.quantity}</span>
                     <button onClick={() => increaseQuantity(item.id)} disabled={item.quantity >= item.stock} className="px-3 py-1 text-zinc-600 hover:bg-zinc-100 disabled:opacity-50">+</button>
                   </div>
-                  <span className="font-bold text-zinc-900 text-sm">{(item.price * item.quantity).toLocaleString("pt-AO")} Kz</span>
+                  <span className="font-bold text-zinc-900 text-sm">{(Number(item.price) * item.quantity).toLocaleString("pt-AO")} Kz</span>
                 </div>
               </div>
             ))
