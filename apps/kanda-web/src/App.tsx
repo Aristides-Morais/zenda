@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 const BUSINESS_ID = "cmvcgldqi0000wkuvb6hfiwq0";
-const API_URL = import.meta.env.VITE_API_URL || ""; // <-- ADICIONADO AQUI
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 type Product = {
   id: string;
@@ -31,7 +31,6 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    // CORRIGIDO AQUI: Usar API_URL
     fetch(`${API_URL}/api/v1/store/${BUSINESS_ID}`)
       .then((res) => res.json())
       .then((data) => {
@@ -95,7 +94,6 @@ export default function App() {
     setErrorMsg(null);
 
     try {
-      // CORRIGIDO AQUI: Usar API_URL
       const res = await fetch(`${API_URL}/api/v1/store/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -141,31 +139,33 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col lg:flex-row relative">
-      <div className="flex-1 p-6 lg:p-10">
-        <header className="mb-10">
-          <h1 className="text-3xl font-bold text-zinc-900">{store.businessName}</h1>
-          <p className="text-zinc-500 mt-1">Bem-vindo à nossa loja online</p>
+      <div className="flex-1 p-4 md:p-10">
+        <header className="mb-6 md:mb-10">
+          <h1 className="text-2xl md:text-3xl font-bold text-zinc-900">{store.businessName}</h1>
+          <p className="text-sm md:text-base text-zinc-500 mt-1">Bem-vindo à nossa loja online</p>
         </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+        {/* Grelha ajustada: 2 colunas no telemóvel, 3 no tablet/desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
           {store.products.map((product) => (
             <div key={product.id} className="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-sm flex flex-col">
-              <div className="h-48 bg-zinc-100 flex items-center justify-center text-zinc-400">
+              {/* Imagem mais pequena no telemóvel (h-32) e maior no PC (h-48) */}
+              <div className="h-32 md:h-48 bg-zinc-100 flex items-center justify-center text-zinc-400">
                 {product.imageUrl ? (
                   <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-sm">Sem imagem</span>
+                  <span className="text-[10px] md:text-sm">Sem imagem</span>
                 )}
               </div>
-              <div className="p-5 flex-1 flex flex-col">
-                <h3 className="font-semibold text-lg text-zinc-900">{product.name}</h3>
-                <p className="text-sm text-zinc-500 mb-4 flex-1">{product.description || "Sem descrição"}</p>
-                <div className="flex items-center justify-between mt-auto">
-                  <span className="text-xl font-bold text-zinc-900">{product.price.toLocaleString("pt-AO")} Kz</span>
+              <div className="p-3 md:p-5 flex-1 flex flex-col">
+                <h3 className="font-semibold text-sm md:text-lg text-zinc-900 line-clamp-2 leading-tight">{product.name}</h3>
+                <p className="text-xs md:text-sm text-zinc-500 mb-2 md:mb-4 flex-1 line-clamp-2">{product.description || "Sem descrição"}</p>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mt-auto">
+                  <span className="text-sm md:text-xl font-bold text-zinc-900">{product.price.toLocaleString("pt-AO")} Kz</span>
                   <button
                     onClick={() => addToCart(product)}
                     disabled={product.stock === 0}
-                    className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+                    className="bg-zinc-900 text-white px-2 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-medium hover:bg-zinc-800 disabled:opacity-50 transition-colors w-full md:w-auto"
                   >
                     {product.stock === 0 ? "Esgotado" : "Adicionar"}
                   </button>
@@ -177,17 +177,17 @@ export default function App() {
       </div>
 
       <aside className="w-full lg:w-96 bg-white border-t lg:border-t-0 lg:border-l border-zinc-200 flex flex-col lg:h-screen lg:sticky lg:top-0">
-        <div className="p-6 border-b border-zinc-200 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-zinc-900">O seu Carrinho</h2>
+        <div className="p-4 md:p-6 border-b border-zinc-200 flex justify-between items-center">
+          <h2 className="text-lg md:text-xl font-bold text-zinc-900">O seu Carrinho</h2>
           <span className="bg-zinc-100 text-zinc-600 px-2 py-1 rounded-full text-xs font-bold">
             {cart.reduce((acc, item) => acc + item.quantity, 0)} itens
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 max-h-[40vh] lg:max-h-none">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 max-h-[40vh] lg:max-h-none">
           {cart.length === 0 ? (
-            <div className="text-center mt-10">
-              <p className="text-zinc-500 mb-4">O carrinho está vazio.</p>
+            <div className="text-center mt-6">
+              <p className="text-sm text-zinc-500 mb-2">O carrinho está vazio.</p>
               <button onClick={() => window.scrollTo(0, 0)} className="text-sm text-zinc-900 underline">Ver produtos</button>
             </div>
           ) : (
@@ -213,13 +213,13 @@ export default function App() {
         </div>
 
         {cart.length > 0 && (
-          <div className="p-6 border-t border-zinc-200 bg-zinc-50">
+          <div className="p-4 md:p-6 border-t border-zinc-200 bg-zinc-50">
             {errorMsg && (
               <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
                 {errorMsg}
               </div>
             )}
-            <div className="flex justify-between items-center mb-4 text-lg font-bold text-zinc-900">
+            <div className="flex justify-between items-center mb-4 text-base md:text-lg font-bold text-zinc-900">
               <span>Total:</span>
               <span>{cartTotal.toLocaleString("pt-AO")} Kz</span>
             </div>
