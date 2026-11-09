@@ -8,6 +8,7 @@ export type Business = {
   id: string;
   name: string;
   plan?: "FREE" | "PRO";
+  role?: "OWNER" | "MANAGER" | "EMPLOYEE";
 };
 
 export type AuthResponse = {

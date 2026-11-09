@@ -21,27 +21,21 @@ export class AuthError extends Error {
 
 export type AuthResult = {
   user: { id: string; email: string; name: string };
-  business: { id: string; name: string; plan: string };
+  business: { id: string; name: string; plan: string; role: string };
   accessToken: string;
   refreshToken: string;
 };
 
-// Função auxiliar para gerar e guardar os tokens na base de dados
 async function generateTokens(user: { id: string; email: string }) {
   const accessToken = signAccessToken({ sub: user.id, email: user.email });
   const jti = randomUUID();
   const refreshToken = signRefreshToken({ sub: user.id, jti });
 
-  // Guardar o JTI (ID único do token) na base de dados
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7); // 7 dias
+  expiresAt.setDate(expiresAt.getDate() + 7);
 
   await prisma.refreshToken.create({
-    data: {
-      token: jti,
-      userId: user.id,
-      expiresAt,
-    },
+    data: { token: jti, userId: user.id, expiresAt },
   });
 
   return { accessToken, refreshToken };
@@ -79,7 +73,12 @@ export async function register(input: RegisterInput): Promise<AuthResult> {
 
   return {
     user: { id: user.id, email: user.email, name: user.name },
-    business: { id: business.id, name: business.name, plan: business.plan },
+    business: { 
+      id: business.id, 
+      name: business.name, 
+      plan: business.plan,
+      role: "OWNER"
+    },
     accessToken,
     refreshToken,
   };
@@ -90,15 +89,10 @@ export async function login(input: LoginInput): Promise<AuthResult> {
     where: { email: input.email },
   });
 
-  if (!user) {
-    throw new AuthError("INVALID_CREDENTIALS", "Email ou password incorretos", 401);
-  }
+  if (!user) throw new AuthError("INVALID_CREDENTIALS", "Email ou password incorretos", 401);
 
   const passwordOk = await verifyPassword(user.passwordHash, input.password);
-
-  if (!passwordOk) {
-    throw new AuthError("INVALID_CREDENTIALS", "Email ou password incorretos", 401);
-  }
+  if (!passwordOk) throw new AuthError("INVALID_CREDENTIALS", "Email ou password incorretos", 401);
 
   const membership = await prisma.membership.findFirst({
     where: { userId: user.id },
@@ -106,9 +100,7 @@ export async function login(input: LoginInput): Promise<AuthResult> {
     orderBy: { createdAt: "asc" },
   });
 
-  if (!membership) {
-    throw new AuthError("NO_BUSINESS", "Utilizador sem negócio associado", 500);
-  }
+  if (!membership) throw new AuthError("NO_BUSINESS", "Utilizador sem negócio associado", 500);
 
   const { accessToken, refreshToken } = await generateTokens(user);
 
@@ -118,6 +110,7 @@ export async function login(input: LoginInput): Promise<AuthResult> {
       id: membership.business.id,
       name: membership.business.name,
       plan: membership.business.plan,
+      role: membership.role,
     },
     accessToken,
     refreshToken,
@@ -132,22 +125,14 @@ export async function rotateRefreshToken(oldRefreshToken: string) {
     throw new AuthError("INVALID_TOKEN", "Token inválido ou expirado", 401);
   }
 
-  // Procurar o token na base de dados
   const storedToken = await prisma.refreshToken.findUnique({
     where: { token: payload.jti },
   });
 
-  // Se não existir, significa que já foi usado ou é falso
-  if (!storedToken) {
-    throw new AuthError("INVALID_TOKEN", "Token já utilizado ou revogado", 401);
-  }
+  if (!storedToken) throw new AuthError("INVALID_TOKEN", "Token já utilizado ou revogado", 401);
 
-  // Apagar o token antigo (Rotação)
-  await prisma.refreshToken.delete({
-    where: { id: storedToken.id },
-  });
+  await prisma.refreshToken.delete({ where: { id: storedToken.id } });
 
-  // Gerar novos tokens
   const user = await prisma.user.findUnique({
     where: { id: payload.sub },
     select: { id: true, email: true },
@@ -159,9 +144,7 @@ export async function rotateRefreshToken(oldRefreshToken: string) {
 }
 
 export async function revokeRefreshToken(jti: string) {
-  await prisma.refreshToken.deleteMany({
-    where: { token: jti },
-  });
+  await prisma.refreshToken.deleteMany({ where: { token: jti } });
 }
 
 export type MeResult = {
@@ -190,9 +173,7 @@ export async function me(userId: string): Promise<MeResult> {
     },
   });
 
-  if (!user) {
-    throw new AuthError("USER_NOT_FOUND", "Utilizador não encontrado", 404);
-  }
+  if (!user) throw new AuthError("USER_NOT_FOUND", "Utilizador não encontrado", 404);
 
   return {
     user: { id: user.id, email: user.email, name: user.name },

@@ -15,12 +15,7 @@ type AuthState = {
   user: User | null;
   business: Business | null;
   loading: boolean;
-  register: (input: {
-    name: string;
-    email: string;
-    password: string;
-    businessName: string;
-  }) => Promise<void>;
+  register: (input: { name: string; email: string; password: string; businessName: string }) => Promise<void>;
   login: (input: { email: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -47,19 +42,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setBusiness({ 
             id: first.businessId, 
             name: first.businessName,
-            plan: first.plan 
+            plan: first.plan,
+            role: first.role
           });
         }
       } catch {
-        // sem sessão válida, é normal
+        // sem sessão
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const register: AuthState["register"] = useCallback(async (input) => {
@@ -96,8 +90,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth deve ser usado dentro de <AuthProvider>");
-  }
+  if (!ctx) throw new Error("useAuth deve ser usado dentro de <AuthProvider>");
   return ctx;
 }

@@ -108,3 +108,19 @@ export async function listOrders(businessId: string) {
   });
   return orders.map(o => ({ ...o, total: Number(o.total) }));
 }
+export async function updateOrderStatus(businessId: string, orderId: string, status: string) {
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, businessId }
+  });
+
+  if (!order) {
+    throw new EcomError("NOT_FOUND", "Pedido não encontrado", 404);
+  }
+
+  const updated = await prisma.order.update({
+    where: { id: orderId },
+    data: { status: status as any }
+  });
+
+  return { ...updated, total: Number(updated.total) };
+}
