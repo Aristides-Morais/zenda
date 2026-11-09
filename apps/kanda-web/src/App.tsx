@@ -23,9 +23,12 @@ type CartItem = Product & { quantity: number };
 export default function App() {
   const [store, setStore] = useState<StoreData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [formData, setFormData] = useState({ name: "", phone: "", address: "" });
   
+  // Novos estados para o carrinho
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false); 
+  
+  const [formData, setFormData] = useState({ name: "", phone: "", address: "" });
   const [isSuccess, setIsSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -86,7 +89,9 @@ export default function App() {
     setCart((prev) => prev.filter((item) => item.id !== productId));
   }
 
+  // Cálculos do carrinho
   const cartTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   async function handleCheckout(e: FormEvent) {
     e.preventDefault();
@@ -118,6 +123,7 @@ export default function App() {
       
       setCart([]);
       setFormData({ name: "", phone: "", address: "" });
+      setIsCartOpen(false); // Fecha o carrinho
       setIsSuccess(true);
     } catch (err: any) {
       setErrorMsg(err.message);
@@ -138,18 +144,37 @@ export default function App() {
   if (!store) return <div className="min-h-screen flex items-center justify-center bg-zinc-50">Loja não encontrada.</div>;
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col lg:flex-row relative">
-      <div className="flex-1 p-4 md:p-10">
-        <header className="mb-6 md:mb-10">
-          <h1 className="text-2xl md:text-3xl font-bold text-zinc-900">{store.businessName}</h1>
-          <p className="text-sm md:text-base text-zinc-500 mt-1">Bem-vindo à nossa loja online</p>
-        </header>
+    <div className="min-h-screen bg-zinc-50 relative">
+      
+      {/* Header com o Carrinho */}
+      <header className="bg-white border-b border-zinc-200 sticky top-0 z-30">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-zinc-900">{store.businessName}</h1>
+            <p className="text-xs text-zinc-500">Loja Online</p>
+          </div>
+          
+          <button 
+            onClick={() => setIsCartOpen(true)}
+            className="relative p-2 text-zinc-600 hover:text-zinc-900 transition-colors"
+          >
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            {cartItemCount > 0 && (
+              <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full border-2 border-white">
+                {cartItemCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </header>
 
-        {/* Grelha ajustada: 2 colunas no telemóvel, 3 no tablet/desktop */}
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
+      {/* Grelha de Produtos (Ocupa o ecrã todo) */}
+      <main className="max-w-6xl mx-auto p-4 md:p-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
           {store.products.map((product) => (
             <div key={product.id} className="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-sm flex flex-col">
-              {/* Imagem mais pequena no telemóvel (h-32) e maior no PC (h-48) */}
               <div className="h-32 md:h-48 bg-zinc-100 flex items-center justify-center text-zinc-400">
                 {product.imageUrl ? (
                   <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
@@ -174,27 +199,39 @@ export default function App() {
             </div>
           ))}
         </div>
-      </div>
+      </main>
 
-      <aside className="w-full lg:w-96 bg-white border-t lg:border-t-0 lg:border-l border-zinc-200 flex flex-col lg:h-screen lg:sticky lg:top-0">
-        <div className="p-4 md:p-6 border-b border-zinc-200 flex justify-between items-center">
-          <h2 className="text-lg md:text-xl font-bold text-zinc-900">O seu Carrinho</h2>
-          <span className="bg-zinc-100 text-zinc-600 px-2 py-1 rounded-full text-xs font-bold">
-            {cart.reduce((acc, item) => acc + item.quantity, 0)} itens
-          </span>
+      {/* Overlay (Fundo escuro quando o carrinho abre) */}
+      {isCartOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+          onClick={() => setIsCartOpen(false)}
+        />
+      )}
+
+      {/* Carrinho Lateral (Drawer) */}
+      <aside className={`
+        fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out
+        ${isCartOpen ? "translate-x-0" : "translate-x-full"}
+      `}>
+        <div className="p-4 md:p-6 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
+          <h2 className="text-lg font-bold text-zinc-900">O seu Carrinho</h2>
+          <button onClick={() => setIsCartOpen(false)} className="text-zinc-500 hover:text-zinc-900 p-1">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 max-h-[40vh] lg:max-h-none">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
           {cart.length === 0 ? (
-            <div className="text-center mt-6">
-              <p className="text-sm text-zinc-500 mb-2">O carrinho está vazio.</p>
-              <button onClick={() => window.scrollTo(0, 0)} className="text-sm text-zinc-900 underline">Ver produtos</button>
+            <div className="text-center mt-10">
+              <p className="text-zinc-500 mb-4">O carrinho está vazio.</p>
+              <button onClick={() => setIsCartOpen(false)} className="text-sm text-zinc-900 underline">Continuar a comprar</button>
             </div>
           ) : (
             cart.map((item) => (
               <div key={item.id} className="flex flex-col gap-2 border-b border-zinc-100 pb-4">
                 <div className="flex justify-between items-start">
-                  <p className="font-medium text-zinc-900">{item.name}</p>
+                  <p className="font-medium text-zinc-900 text-sm">{item.name}</p>
                   <button onClick={() => removeFromCart(item.id)} className="text-red-500 hover:text-red-700" title="Remover item">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                   </button>
@@ -205,7 +242,7 @@ export default function App() {
                     <span className="px-3 py-1 text-sm font-medium border-x border-zinc-300">{item.quantity}</span>
                     <button onClick={() => increaseQuantity(item.id)} disabled={item.quantity >= item.stock} className="px-3 py-1 text-zinc-600 hover:bg-zinc-100 disabled:opacity-50">+</button>
                   </div>
-                  <span className="font-bold text-zinc-900">{(item.price * item.quantity).toLocaleString("pt-AO")} Kz</span>
+                  <span className="font-bold text-zinc-900 text-sm">{(item.price * item.quantity).toLocaleString("pt-AO")} Kz</span>
                 </div>
               </div>
             ))
@@ -219,7 +256,7 @@ export default function App() {
                 {errorMsg}
               </div>
             )}
-            <div className="flex justify-between items-center mb-4 text-base md:text-lg font-bold text-zinc-900">
+            <div className="flex justify-between items-center mb-4 text-lg font-bold text-zinc-900">
               <span>Total:</span>
               <span>{cartTotal.toLocaleString("pt-AO")} Kz</span>
             </div>
@@ -236,6 +273,7 @@ export default function App() {
         )}
       </aside>
 
+      {/* Modal de Sucesso */}
       {isSuccess && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
@@ -246,7 +284,7 @@ export default function App() {
             </div>
             <h2 className="text-2xl font-bold text-zinc-900 mb-2">Pedido Confirmado!</h2>
             <p className="text-zinc-500 mb-8">
-              O seu pedido foi efetuado com sucesso. O vendedor entrará em contacto brevemente para combinar a entrega.
+              O seu pedido foi efetuado com sucesso. O vendedor entrará em contacto brevemente.
             </p>
             <button
               onClick={() => setIsSuccess(false)}
