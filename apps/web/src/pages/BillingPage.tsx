@@ -6,21 +6,21 @@ import { useAuth } from "../features/auth/AuthContext";
 export default function BillingPage() {
   const { business } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [currentPlan, setCurrentPlan] = useState<"FREE" | "PRO">(
-    business?.plan || "FREE"
-  );
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  const isSuccess = urlParams.get("success") === "true";
+
+  const currentPlan = business?.plan || "FREE";
 
   async function handleUpgrade() {
     setLoading(true);
     try {
-      await apiFetch("/api/v1/business/upgrade", { method: "PATCH" });
-      setCurrentPlan("PRO");
-      alert("Upgrade efetuado com sucesso! Bem-vindo ao Zenda PRO.");
-      // Força um refresh na página para atualizar o AuthContext
-      window.location.reload();
+      const { url } = await apiFetch<{ url: string }>("/api/v1/billing/checkout", {
+        method: "POST",
+      });
+      window.location.href = url; 
     } catch (err) {
-      alert("Erro ao processar o upgrade.");
-    } finally {
+      alert("Erro ao iniciar o pagamento.");
       setLoading(false);
     }
   }
@@ -30,6 +30,12 @@ export default function BillingPage() {
       <PageHeader title="Faturação" subtitle="Faça a gestão do seu plano" />
       
       <div className="p-8 max-w-4xl">
+        {isSuccess && (
+          <div className="mb-6 p-4 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg">
+            ✅ Pagamento concluído com sucesso! O seu plano foi atualizado.
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Plano FREE */}
           <div className={`bg-white rounded-xl border p-6 ${currentPlan === "FREE" ? "border-zinc-900 ring-1 ring-zinc-900" : "border-zinc-200"}`}>
@@ -72,7 +78,7 @@ export default function BillingPage() {
                 disabled={loading}
                 className="w-full py-2 bg-zinc-900 text-white font-medium rounded-lg hover:bg-zinc-800 disabled:opacity-50 transition-colors"
               >
-                {loading ? "A processar..." : "Fazer Upgrade"}
+                {loading ? "A redirecionar..." : "Fazer Upgrade"}
               </button>
             )}
           </div>

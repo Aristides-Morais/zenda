@@ -11,15 +11,19 @@ import { saleRouter } from "./modules/sale/sale.routes.js";
 import { expenseRouter } from "./modules/expense/expense.routes.js";
 import { businessRouter } from "./modules/business/business.routes.js";
 import { storeRouter, ecomAdminRouter } from "./modules/ecommerce/ecommerce.routes.js";
+import { billingRouter } from "./modules/billing/billing.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware.js";
 
 const app = express();
 
-// Diz ao Express para confiar no proxy do Render (1 hop)
 app.set('trust proxy', 1);
 
 app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN.split(","), credentials: true }));
+
+// WEBHOOK DO STRIPE (Antes do express.json())
+app.use("/api/v1/billing", billingRouter);
+
 app.use(express.json());
 app.use(cookieParser());
 
