@@ -31,9 +31,8 @@ export default function App() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null); // Feedback visual
+  const [toast, setToast] = useState<string | null>(null);
 
-  // Correção crucial: Converter preços para Número logo na entrada
   useEffect(() => {
     fetch(`${API_URL}/api/v1/store/${BUSINESS_ID}`)
       .then((res) => res.json())
@@ -41,7 +40,8 @@ export default function App() {
         if (data.products) {
           data.products = data.products.map((p: any) => ({
             ...p,
-            price: Number(p.price) // <-- Garante que é sempre número
+            price: Number(p.price), // <-- PREÇO FORÇADO A NÚMERO AQUI
+            stock: Number(p.stock)
           }));
         }
         setStore(data);
@@ -73,7 +73,7 @@ export default function App() {
       return [...prev, { ...product, quantity: 1 }];
     });
     setErrorMsg(null);
-    showToast("Produto adicionado ao carrinho!");
+    showToast("Produto adicionado!");
   }
 
   function decreaseQuantity(productId: string) {
@@ -103,8 +103,9 @@ export default function App() {
     showToast("Produto removido.");
   }
 
-  const cartTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  // MATEMÁTICA BLINDADA: Number() em tudo
+  const cartTotal = cart.reduce((acc, item) => acc + (Number(item.price) * Number(item.quantity)), 0);
+  const cartItemCount = cart.reduce((acc, item) => acc + Number(item.quantity), 0);
 
   async function handleCheckout(e: FormEvent) {
     e.preventDefault();
@@ -120,7 +121,7 @@ export default function App() {
           customerName: formData.name,
           customerPhone: formData.phone,
           customerAddress: formData.address,
-          items: cart.map((item) => ({ productId: item.id, quantity: item.quantity })),
+          items: cart.map((item) => ({ productId: item.id, quantity: Number(item.quantity) })),
         }),
       });
       
@@ -156,20 +157,17 @@ export default function App() {
 
   if (!store) return <div className="min-h-screen flex items-center justify-center bg-zinc-50">Loja não encontrada.</div>;
 
-  // Filtro da barra de pesquisa
   const filteredProducts = store.products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div className="min-h-screen bg-zinc-50 relative">
       
-      {/* Notificação Toast */}
       {toast && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-zinc-900 text-white px-6 py-3 rounded-full shadow-lg text-sm font-medium animate-fade-in-down">
           {toast}
         </div>
       )}
 
-      {/* Header com Pesquisa e Carrinho */}
       <header className="bg-white border-b border-zinc-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
           
@@ -179,7 +177,6 @@ export default function App() {
               <p className="text-xs text-zinc-500 hidden md:block">Loja Online Segura</p>
             </div>
             
-            {/* Botão do Carrinho */}
             <button 
               onClick={() => setIsCartOpen(true)}
               className="relative p-2 text-zinc-700 hover:text-emerald-600 transition-colors md:hidden"
@@ -195,7 +192,6 @@ export default function App() {
             </button>
           </div>
 
-          {/* Barra de Pesquisa e Carrinho Desktop */}
           <div className="flex items-center gap-4 w-full md:w-auto">
             <div className="relative flex-1 md:w-80">
               <input 
@@ -225,21 +221,19 @@ export default function App() {
         </div>
       </header>
 
-      {/* Grelha de Produtos */}
       <main className="max-w-6xl mx-auto p-4 md:p-8">
         {filteredProducts.length === 0 ? (
           <div className="text-center py-20">
-            <svg className="w-16 h-16 text-zinc-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             <h2 className="text-xl font-bold text-zinc-900 mb-2">Nenhum produto encontrado</h2>
             <p className="text-zinc-500">Tente pesquisar por outro nome.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
             {filteredProducts.map((product) => (
-              <div key={product.id} className="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col group">
+              <div key={product.id} className="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-sm flex flex-col group">
                 <div className="h-32 md:h-48 bg-zinc-100 flex items-center justify-center text-zinc-400 relative overflow-hidden">
                   {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-[10px] md:text-sm">Sem imagem</span>
                   )}
@@ -248,7 +242,7 @@ export default function App() {
                   <h3 className="font-semibold text-sm md:text-base text-zinc-900 line-clamp-2 leading-tight">{product.name}</h3>
                   <p className="text-[10px] md:text-xs text-zinc-500 mb-2 md:mb-4 flex-1 line-clamp-2">{product.description || "Sem descrição"}</p>
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mt-auto">
-                    <span className="text-sm md:text-lg font-bold text-emerald-600">{product.price.toLocaleString("pt-AO")} Kz</span>
+                    <span className="text-sm md:text-lg font-bold text-emerald-600">{Number(product.price).toLocaleString("pt-AO")} Kz</span>
                     <button
                       onClick={() => addToCart(product)}
                       disabled={product.stock === 0}
@@ -264,7 +258,6 @@ export default function App() {
         )}
       </main>
 
-      {/* Overlay do Carrinho */}
       {isCartOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 transition-opacity backdrop-blur-sm"
@@ -272,7 +265,6 @@ export default function App() {
         />
       )}
 
-      {/* Carrinho Lateral (Drawer) */}
       <aside className={`
         fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out
         ${isCartOpen ? "translate-x-0" : "translate-x-full"}
@@ -287,7 +279,6 @@ export default function App() {
         <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
           {cart.length === 0 ? (
             <div className="text-center mt-10">
-              <svg className="w-16 h-16 text-zinc-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
               <p className="text-zinc-500 mb-4">O carrinho está vazio.</p>
               <button onClick={() => setIsCartOpen(false)} className="text-sm font-medium text-emerald-600 hover:underline">Continuar a comprar</button>
             </div>
@@ -306,7 +297,8 @@ export default function App() {
                     <span className="px-3 py-1 text-sm font-medium border-x border-zinc-300">{item.quantity}</span>
                     <button onClick={() => increaseQuantity(item.id)} disabled={item.quantity >= item.stock} className="px-3 py-1 text-zinc-600 hover:bg-zinc-100 rounded-r-lg disabled:opacity-50 transition-colors">+</button>
                   </div>
-                  <span className="font-bold text-emerald-600 text-sm">{(item.price * item.quantity).toLocaleString("pt-AO")} Kz</span>
+                  {/* SUBTOTAL BLINDADO */}
+                  <span className="font-bold text-emerald-600 text-sm">{(Number(item.price) * Number(item.quantity)).toLocaleString("pt-AO")} Kz</span>
                 </div>
               </div>
             ))
@@ -322,7 +314,8 @@ export default function App() {
             )}
             <div className="flex justify-between items-center mb-4 text-xl font-bold text-zinc-900">
               <span>Total:</span>
-              <span className="text-emerald-600">{cartTotal.toLocaleString("pt-AO")} Kz</span>
+              {/* TOTAL GERAL BLINDADO */}
+              <span className="text-emerald-600">{Number(cartTotal).toLocaleString("pt-AO")} Kz</span>
             </div>
 
             <form onSubmit={handleCheckout} className="space-y-3">
@@ -337,7 +330,6 @@ export default function App() {
         )}
       </aside>
 
-      {/* Modal de Sucesso */}
       {isSuccess && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
