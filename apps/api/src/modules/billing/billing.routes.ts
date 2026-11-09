@@ -17,7 +17,6 @@ billingRouter.post("/checkout", requireAuth, requireBusiness, async (req, res, n
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
-      payment_method_types: ["card"],
       line_items: [{ price: env.STRIPE_PRICE_ID, quantity: 1 }],
       customer_email: req.user!.email,
       client_reference_id: business.id,
@@ -56,6 +55,10 @@ billingRouter.post(
 
       if (businessId) {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        
+        // Correção: A API do Stripe agora lê a data no 'items.data[0]'
+        const periodEnd = subscription.items.data[0].current_period_end;
+
         await prisma.business.update({
           where: { id: businessId },
           data: {
@@ -63,7 +66,7 @@ billingRouter.post(
             stripeCustomerId: session.customer as string,
             stripeSubscriptionId: subscriptionId,
             stripePriceId: subscription.items.data[0].price.id,
-            stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+            stripeCurrentPeriodEnd: new Date(periodEnd * 1000),
           },
         });
       }

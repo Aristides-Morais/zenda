@@ -64,6 +64,12 @@ model Business {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // CAMPOS DO STRIPE (NOVOS)
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
+
   memberships Membership[]
   products    Product[]
   customers   Customer[]
