@@ -24,6 +24,19 @@ export default function BillingPage() {
       setLoading(false);
     }
   }
+  const { business } = useAuth();
+
+// NOVO BLOQUEIO DE SEGURANÇA VISUAL
+if (business?.role !== "OWNER") {
+  return (
+    <div className="p-8 flex items-center justify-center min-h-[50vh]">
+      <div className="text-center bg-red-50 p-6 rounded-xl border border-red-200 max-w-md">
+        <h2 className="text-lg font-bold text-red-700 mb-2">Acesso Negado</h2>
+        <p className="text-sm text-red-600">Apenas o Dono do negócio pode gerir a faturação e os planos.</p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <>

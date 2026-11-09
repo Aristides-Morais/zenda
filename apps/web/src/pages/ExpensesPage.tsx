@@ -18,6 +18,9 @@ export default function ExpensesPage() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [submitting, setSubmitting] = useState(false);
   
+  // NOVO: Estado para o modal de apagar
+  const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
+
   const [formData, setFormData] = useState({
     description: "",
     amount: "",
@@ -90,13 +93,15 @@ export default function ExpensesPage() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!window.confirm("Apagar esta despesa?")) return;
+  // NOVO: Função de apagar real
+  async function confirmDelete() {
+    if (!expenseToDelete) return;
     try {
-      await expensesApi.deleteExpense(id);
+      await expensesApi.deleteExpense(expenseToDelete.id);
+      setExpenseToDelete(null);
       loadExpenses();
     } catch (err) {
-      alert("Erro ao apagar");
+      alert("Erro ao apagar despesa");
     }
   }
 
@@ -149,7 +154,7 @@ export default function ExpensesPage() {
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-3">
                         <button onClick={() => handleOpenEdit(e)} className="text-zinc-500 hover:text-zinc-900 font-medium">Editar</button>
-                        <button onClick={() => handleDelete(e.id)} className="text-red-500 hover:text-red-700 font-medium">Apagar</button>
+                        <button onClick={() => setExpenseToDelete(e)} className="text-red-500 hover:text-red-700 font-medium">Apagar</button>
                       </div>
                     </td>
                   </tr>
@@ -168,6 +173,7 @@ export default function ExpensesPage() {
         </div>
       </div>
 
+      {/* Modal de Criar/Editar */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
@@ -203,6 +209,23 @@ export default function ExpensesPage() {
                 <button type="submit" disabled={submitting} className="px-4 py-2 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 disabled:opacity-50">{submitting ? "A guardar..." : "Guardar"}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* NOVO: Modal de Confirmação de Apagar */}
+      {expenseToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-sm p-6 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <h3 className="text-lg font-bold text-zinc-900 mb-2">Apagar Despesa</h3>
+            <p className="text-sm text-zinc-500 mb-6">Tem a certeza que deseja apagar a despesa <strong>{expenseToDelete.description}</strong>?</p>
+            <div className="flex gap-3 w-full">
+              <button onClick={() => setExpenseToDelete(null)} className="flex-1 py-2 text-sm font-medium text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition-colors">Cancelar</button>
+              <button onClick={confirmDelete} className="flex-1 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">Sim, apagar</button>
+            </div>
           </div>
         </div>
       )}
